@@ -1,0 +1,735 @@
+---
+redirect_from:
+  - "/03associationanalysis/mba"
+interact_link: content/03AssociationAnalysis/mba.ipynb
+kernel_name: python3
+kernel_path: content/03AssociationAnalysis
+has_widgets: false
+title: |-
+  Association Analysis
+pagenum: 2
+prev_page:
+  url: /02Combine/first.html
+next_page:
+  url: /04Code/Code.html
+suffix: .ipynb
+search: x br y lift supp itemset association dataset equipment analysis us support text confidence features our measure rule listings cup measures independent occurrences lets table having binary representing presence extra car makes suitable run fields definition market basket mainly data mining process helps identify co occurrence certain events activities performed user group case results pairs found together often main concepts help strength follows appears total defined proportion transactions database contain conf probability occuring times ratio observed expected imply probabilities meaning doesnt show any statistically proven relationship degree those dependent another items substitute sorting complex usefull same sorted
+
+comment: "***PROGRAMMATICALLY GENERATED, DO NOT EDIT. SEE ORIGINAL FILES IN /content***"
+---
+
+    <main class="jupyter-page">
+    <div id="page-info"><div id="page-title">Association Analysis</div>
+</div>
+    <div class="jb_cell">
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The dataset is having many binary features, each representing the presence of some extra equipment in the car. 
+This makes the dataset suitable to run association analysis on the equipment fields.</p>
+<p>By definition, Association analysis (or Market Basket Analysis) is mainly a data mining process that helps identify co-occurrence of certain events/activities performed by a user group.</p>
+<p>In our case we will use the results to see which pairs of the equipment features are found together most often. There are 3 main concepts that help us measure the strength of an association rule. They are as follows:</p>
+<hr>
+<ol>
+<li><p>Support :</p>
+<ul>
+<li><p>$ supp(X) = {\text{# of listings in which }X \text{ appears} \over \text{Total # of listings}}$</p>
+</li>
+<li><p>Support of an itemset $ X $ is defined as a proportion of transactions in the database that contain $ X $
+<br/><br/></p>
+</li>
+</ul>
+</li>
+<li><p><em>Confidence</em>:</p>
+<ul>
+<li><p>$conf(X \to Y) = {supp(X \cup Y)\over supp(X)}$</p>
+</li>
+<li><p>Confidence measures the probability of itemset $ Y $ occuring with itemset $ X $.
+<br/><br/></p>
+</li>
+</ul>
+</li>
+<li><p><em>Lift</em>:</p>
+<ul>
+<li>$lift(X \to Y) = {supp(X \cup Y)\over supp(X) \times supp(Y)}$ 
+<br/><br/></li>
+<li>Lift measures the ratio of the observed support to that expected if  $ X $ and $ Y $ were independent.
+  <br/><br/><ul>
+<li>If $ lift(X \to Y)  = 1 $, then it would imply that probabilities of occurrences of itemset X and itemset Y are independent of each other, meaning that the rule doesn’t show any statistically proven relationship.
+<br/><br/></li>
+<li>If $ lift(X \to Y) &gt; 1 $, that lets us know the degree to which those two occurrences are dependent on one another
+<br/><br/></li>
+<li>If $ lift(X \to Y) &lt; 1 $, that lets us know the items are substitute to each other</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<p>We are sorting the association table by the lift measure, as it is the most complex one and most usefull in our dataset.</p>
+
+</div>
+</div>
+</div>
+</div>
+
+<div class="jb_cell">
+
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">pymongo</span> <span class="kn">import</span> <span class="n">MongoClient</span> 
+<span class="kn">from</span> <span class="nn">mlxtend.frequent_patterns</span> <span class="kn">import</span> <span class="n">apriori</span>
+<span class="kn">from</span> <span class="nn">mlxtend.frequent_patterns</span> <span class="kn">import</span> <span class="n">association_rules</span>
+<span class="n">tbr</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span><span class="s1">&#39;10 months&#39;</span><span class="p">,</span><span class="s1">&#39;11 months&#39;</span><span class="p">,</span><span class="s1">&#39;112 months&#39;</span><span class="p">,</span><span class="s1">&#39;12 months&#39;</span><span class="p">,</span><span class="s1">&#39;13 months&#39;</span><span class="p">,</span><span class="s1">&#39;14 months&#39;</span><span class="p">,</span><span class="s1">&#39;15 months&#39;</span><span class="p">,</span><span class="s1">&#39;16 months&#39;</span><span class="p">,</span><span class="s1">&#39;17 months&#39;</span><span class="p">,</span><span class="s1">&#39;18 months&#39;</span><span class="p">,</span>
+       <span class="s1">&#39;19 months&#39;</span><span class="p">,</span><span class="s1">&#39;2 months&#39;</span><span class="p">,</span><span class="s1">&#39;20 months&#39;</span><span class="p">,</span><span class="s1">&#39;21 months&#39;</span><span class="p">,</span><span class="s1">&#39;22 months&#39;</span><span class="p">,</span><span class="s1">&#39;23 months&#39;</span><span class="p">,</span><span class="s1">&#39;24 months&#39;</span><span class="p">,</span><span class="s1">&#39;25 months&#39;</span><span class="p">,</span><span class="s1">&#39;26 months&#39;</span><span class="p">,</span><span class="s1">&#39;27 months&#39;</span><span class="p">,</span>
+       <span class="s1">&#39;28 months&#39;</span><span class="p">,</span><span class="s1">&#39;29 months&#39;</span><span class="p">,</span><span class="s1">&#39;3 months&#39;</span><span class="p">,</span><span class="s1">&#39;30 months&#39;</span><span class="p">,</span><span class="s1">&#39;31 months&#39;</span><span class="p">,</span><span class="s1">&#39;32 months&#39;</span><span class="p">,</span><span class="s1">&#39;33 months&#39;</span><span class="p">,</span><span class="s1">&#39;34 months&#39;</span><span class="p">,</span><span class="s1">&#39;35 months&#39;</span><span class="p">,</span><span class="s1">&#39;36 months&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;38 months&#39;</span><span class="p">,</span><span class="s1">&#39;4 months&#39;</span><span class="p">,</span><span class="s1">&#39;40 months&#39;</span><span class="p">,</span><span class="s1">&#39;41 months&#39;</span><span class="p">,</span><span class="s1">&#39;42 months&#39;</span><span class="p">,</span><span class="s1">&#39;43 months&#39;</span><span class="p">,</span><span class="s1">&#39;44 months&#39;</span><span class="p">,</span><span class="s1">&#39;45 months&#39;</span><span class="p">,</span><span class="s1">&#39;46 months&#39;</span><span class="p">,</span><span class="s1">&#39;47 months&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;48 months&#39;</span><span class="p">,</span><span class="s1">&#39;5 months&#39;</span><span class="p">,</span><span class="s1">&#39;50 months&#39;</span><span class="p">,</span><span class="s1">&#39;52 months&#39;</span><span class="p">,</span><span class="s1">&#39;53 months&#39;</span><span class="p">,</span><span class="s1">&#39;54 months&#39;</span><span class="p">,</span><span class="s1">&#39;55 months&#39;</span><span class="p">,</span><span class="s1">&#39;56 months&#39;</span><span class="p">,</span><span class="s1">&#39;58 months&#39;</span><span class="p">,</span><span class="s1">&#39;59 months&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;6 months&#39;</span><span class="p">,</span><span class="s1">&#39;60 months&#39;</span><span class="p">,</span><span class="s1">&#39;7 months&#39;</span><span class="p">,</span><span class="s1">&#39;72 months&#39;</span><span class="p">,</span><span class="s1">&#39;8 months&#39;</span><span class="p">,</span><span class="s1">&#39;84 months&#39;</span><span class="p">,</span><span class="s1">&#39;88 months&#39;</span><span class="p">,</span><span class="s1">&#39;9 months&#39;</span><span class="p">,</span> <span class="s1">&#39;0 months&#39;</span><span class="p">,</span><span class="s1">&#39;1 months&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">readData</span><span class="p">():</span>
+
+    <span class="n">client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="s1">&#39;mongodb+srv://Martin:Kostadinov@dwprojectcluster.lpqbf.mongodb.net/cars_database?retryWrites=true&amp;w=majority&#39;</span><span class="p">)</span>
+
+    <span class="n">df_cars</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">cars_database</span><span class="o">.</span><span class="n">cars</span><span class="o">.</span><span class="n">find</span><span class="p">({})))</span>
+    <span class="n">df_cars</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;_id&#39;</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">df_cars</span> <span class="o">=</span> <span class="n">df_cars</span><span class="p">[</span><span class="n">df_cars</span><span class="p">[</span><span class="s1">&#39;Loaded_in_DW&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="kc">False</span><span class="p">)]</span>
+
+
+    <span class="k">return</span> <span class="n">df_cars</span>
+
+
+<span class="n">df_cars</span> <span class="o">=</span> <span class="n">readData</span><span class="p">()</span>
+
+<span class="n">equipment</span> <span class="o">=</span> <span class="n">df_cars</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span><span class="mi">15</span><span class="p">:]</span>
+<span class="n">equipment</span> <span class="o">=</span> <span class="n">equipment</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+<span class="n">equipment</span> <span class="o">=</span> <span class="n">equipment</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+<span class="n">equipment</span> <span class="o">=</span> <span class="n">equipment</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+<span class="n">equipment</span> <span class="o">=</span> <span class="n">equipment</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tbr</span> <span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+<span class="n">ap</span> <span class="o">=</span> <span class="n">apriori</span><span class="p">(</span><span class="n">equipment</span><span class="p">,</span> <span class="n">min_support</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">use_colnames</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">rules_ap</span> <span class="o">=</span> <span class="n">association_rules</span><span class="p">(</span><span class="n">ap</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;lift&quot;</span><span class="p">,</span> <span class="n">min_threshold</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">rules_ap</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="s1">&#39;lift&#39;</span><span class="p">,</span> <span class="n">ascending</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="jb_output_wrapper }}">
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>antecedents</th>
+      <th>consequents</th>
+      <th>antecedent support</th>
+      <th>consequent support</th>
+      <th>support</th>
+      <th>confidence</th>
+      <th>lift</th>
+      <th>leverage</th>
+      <th>conviction</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>94</th>
+      <td>(Side airbag)</td>
+      <td>(Passenger-side airbag, ABS)</td>
+      <td>0.783843</td>
+      <td>0.786129</td>
+      <td>0.701440</td>
+      <td>0.894873</td>
+      <td>1.138328</td>
+      <td>0.085238</td>
+      <td>2.034404</td>
+    </tr>
+    <tr>
+      <th>91</th>
+      <td>(Passenger-side airbag, ABS)</td>
+      <td>(Side airbag)</td>
+      <td>0.786129</td>
+      <td>0.783843</td>
+      <td>0.701440</td>
+      <td>0.892271</td>
+      <td>1.138328</td>
+      <td>0.085238</td>
+      <td>2.006483</td>
+    </tr>
+    <tr>
+      <th>93</th>
+      <td>(Passenger-side airbag)</td>
+      <td>(Side airbag, ABS)</td>
+      <td>0.821904</td>
+      <td>0.752470</td>
+      <td>0.701440</td>
+      <td>0.853433</td>
+      <td>1.134175</td>
+      <td>0.082982</td>
+      <td>1.688848</td>
+    </tr>
+    <tr>
+      <th>92</th>
+      <td>(Side airbag, ABS)</td>
+      <td>(Passenger-side airbag)</td>
+      <td>0.752470</td>
+      <td>0.821904</td>
+      <td>0.701440</td>
+      <td>0.932183</td>
+      <td>1.134175</td>
+      <td>0.082982</td>
+      <td>2.626135</td>
+    </tr>
+    <tr>
+      <th>41</th>
+      <td>(Side airbag)</td>
+      <td>(Passenger-side airbag)</td>
+      <td>0.783843</td>
+      <td>0.821904</td>
+      <td>0.723756</td>
+      <td>0.923343</td>
+      <td>1.123419</td>
+      <td>0.079512</td>
+      <td>2.323283</td>
+    </tr>
+    <tr>
+      <th>40</th>
+      <td>(Passenger-side airbag)</td>
+      <td>(Side airbag)</td>
+      <td>0.821904</td>
+      <td>0.783843</td>
+      <td>0.723756</td>
+      <td>0.880584</td>
+      <td>1.123419</td>
+      <td>0.079512</td>
+      <td>1.810123</td>
+    </tr>
+    <tr>
+      <th>86</th>
+      <td>(ABS, Power windows)</td>
+      <td>(Side airbag)</td>
+      <td>0.800806</td>
+      <td>0.783843</td>
+      <td>0.701644</td>
+      <td>0.876171</td>
+      <td>1.117789</td>
+      <td>0.073937</td>
+      <td>1.745611</td>
+    </tr>
+    <tr>
+      <th>87</th>
+      <td>(Side airbag)</td>
+      <td>(ABS, Power windows)</td>
+      <td>0.783843</td>
+      <td>0.800806</td>
+      <td>0.701644</td>
+      <td>0.895133</td>
+      <td>1.117789</td>
+      <td>0.073937</td>
+      <td>1.899482</td>
+    </tr>
+    <tr>
+      <th>84</th>
+      <td>(Side airbag, ABS)</td>
+      <td>(Power windows)</td>
+      <td>0.752470</td>
+      <td>0.841320</td>
+      <td>0.701644</td>
+      <td>0.932454</td>
+      <td>1.108323</td>
+      <td>0.068576</td>
+      <td>2.349220</td>
+    </tr>
+    <tr>
+      <th>89</th>
+      <td>(Power windows)</td>
+      <td>(Side airbag, ABS)</td>
+      <td>0.841320</td>
+      <td>0.752470</td>
+      <td>0.701644</td>
+      <td>0.833980</td>
+      <td>1.108323</td>
+      <td>0.068576</td>
+      <td>1.490963</td>
+    </tr>
+    <tr>
+      <th>63</th>
+      <td>(Side airbag)</td>
+      <td>(ABS, Power steering)</td>
+      <td>0.783843</td>
+      <td>0.819335</td>
+      <td>0.707683</td>
+      <td>0.902837</td>
+      <td>1.101914</td>
+      <td>0.065452</td>
+      <td>1.859405</td>
+    </tr>
+    <tr>
+      <th>62</th>
+      <td>(ABS, Power steering)</td>
+      <td>(Side airbag)</td>
+      <td>0.819335</td>
+      <td>0.783843</td>
+      <td>0.707683</td>
+      <td>0.863728</td>
+      <td>1.101914</td>
+      <td>0.065452</td>
+      <td>1.586215</td>
+    </tr>
+    <tr>
+      <th>80</th>
+      <td>(ABS, Power windows)</td>
+      <td>(Passenger-side airbag)</td>
+      <td>0.800806</td>
+      <td>0.821904</td>
+      <td>0.725023</td>
+      <td>0.905367</td>
+      <td>1.101548</td>
+      <td>0.066837</td>
+      <td>1.881955</td>
+    </tr>
+    <tr>
+      <th>81</th>
+      <td>(Passenger-side airbag)</td>
+      <td>(ABS, Power windows)</td>
+      <td>0.821904</td>
+      <td>0.800806</td>
+      <td>0.725023</td>
+      <td>0.882126</td>
+      <td>1.101548</td>
+      <td>0.066837</td>
+      <td>1.689891</td>
+    </tr>
+    <tr>
+      <th>66</th>
+      <td>(Air conditioning, ABS)</td>
+      <td>(Power windows)</td>
+      <td>0.798370</td>
+      <td>0.841320</td>
+      <td>0.737936</td>
+      <td>0.924303</td>
+      <td>1.098635</td>
+      <td>0.066252</td>
+      <td>2.096262</td>
+    </tr>
+    <tr>
+      <th>71</th>
+      <td>(Power windows)</td>
+      <td>(Air conditioning, ABS)</td>
+      <td>0.841320</td>
+      <td>0.798370</td>
+      <td>0.737936</td>
+      <td>0.877117</td>
+      <td>1.098635</td>
+      <td>0.066252</td>
+      <td>1.640830</td>
+    </tr>
+    <tr>
+      <th>38</th>
+      <td>(Side airbag)</td>
+      <td>(Power windows)</td>
+      <td>0.783843</td>
+      <td>0.841320</td>
+      <td>0.724028</td>
+      <td>0.923690</td>
+      <td>1.097906</td>
+      <td>0.064565</td>
+      <td>2.079406</td>
+    </tr>
+    <tr>
+      <th>39</th>
+      <td>(Power windows)</td>
+      <td>(Side airbag)</td>
+      <td>0.841320</td>
+      <td>0.783843</td>
+      <td>0.724028</td>
+      <td>0.860586</td>
+      <td>1.097906</td>
+      <td>0.064565</td>
+      <td>1.550464</td>
+    </tr>
+    <tr>
+      <th>100</th>
+      <td>(Power windows)</td>
+      <td>(Air conditioning, Power steering)</td>
+      <td>0.841320</td>
+      <td>0.768087</td>
+      <td>0.708709</td>
+      <td>0.842378</td>
+      <td>1.096722</td>
+      <td>0.062502</td>
+      <td>1.471322</td>
+    </tr>
+    <tr>
+      <th>97</th>
+      <td>(Air conditioning, Power steering)</td>
+      <td>(Power windows)</td>
+      <td>0.768087</td>
+      <td>0.841320</td>
+      <td>0.708709</td>
+      <td>0.922694</td>
+      <td>1.096722</td>
+      <td>0.062502</td>
+      <td>2.052623</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="jb_cell">
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h5 id="The-same-table-sorted-by-confidence:">The same table sorted by confidence:<a class="anchor-link" href="#The-same-table-sorted-by-confidence:"> </a></h5>
+</div>
+</div>
+</div>
+</div>
+
+<div class="jb_cell">
+
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">rules_ap</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="s1">&#39;confidence&#39;</span><span class="p">,</span> <span class="n">ascending</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="jb_output_wrapper }}">
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>antecedents</th>
+      <th>consequents</th>
+      <th>antecedent support</th>
+      <th>consequent support</th>
+      <th>support</th>
+      <th>confidence</th>
+      <th>lift</th>
+      <th>leverage</th>
+      <th>conviction</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>90</th>
+      <td>(Passenger-side airbag, Side airbag)</td>
+      <td>(ABS)</td>
+      <td>0.723756</td>
+      <td>0.891539</td>
+      <td>0.701440</td>
+      <td>0.969166</td>
+      <td>1.087071</td>
+      <td>0.056183</td>
+      <td>3.517606</td>
+    </tr>
+    <tr>
+      <th>85</th>
+      <td>(Side airbag, Power windows)</td>
+      <td>(ABS)</td>
+      <td>0.724028</td>
+      <td>0.891539</td>
+      <td>0.701644</td>
+      <td>0.969084</td>
+      <td>1.086979</td>
+      <td>0.056145</td>
+      <td>3.508252</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>(Electronic stability control)</td>
+      <td>(ABS)</td>
+      <td>0.736619</td>
+      <td>0.891539</td>
+      <td>0.713473</td>
+      <td>0.968578</td>
+      <td>1.086412</td>
+      <td>0.056749</td>
+      <td>3.451762</td>
+    </tr>
+    <tr>
+      <th>79</th>
+      <td>(Passenger-side airbag, Power windows)</td>
+      <td>(ABS)</td>
+      <td>0.748709</td>
+      <td>0.891539</td>
+      <td>0.725023</td>
+      <td>0.968365</td>
+      <td>1.086173</td>
+      <td>0.057521</td>
+      <td>3.428512</td>
+    </tr>
+    <tr>
+      <th>61</th>
+      <td>(Side airbag, Power steering)</td>
+      <td>(ABS)</td>
+      <td>0.731519</td>
+      <td>0.891539</td>
+      <td>0.707683</td>
+      <td>0.967415</td>
+      <td>1.085107</td>
+      <td>0.055505</td>
+      <td>3.328592</td>
+    </tr>
+    <tr>
+      <th>55</th>
+      <td>(Passenger-side airbag, Power steering)</td>
+      <td>(ABS)</td>
+      <td>0.757113</td>
+      <td>0.891539</td>
+      <td>0.732066</td>
+      <td>0.966917</td>
+      <td>1.084549</td>
+      <td>0.057070</td>
+      <td>3.278506</td>
+    </tr>
+    <tr>
+      <th>72</th>
+      <td>(Passenger-side airbag, Air conditioning)</td>
+      <td>(ABS)</td>
+      <td>0.742349</td>
+      <td>0.891539</td>
+      <td>0.716947</td>
+      <td>0.965782</td>
+      <td>1.083275</td>
+      <td>0.055114</td>
+      <td>3.169701</td>
+    </tr>
+    <tr>
+      <th>50</th>
+      <td>(Power windows, Power steering)</td>
+      <td>(ABS)</td>
+      <td>0.773884</td>
+      <td>0.891539</td>
+      <td>0.745344</td>
+      <td>0.963121</td>
+      <td>1.080291</td>
+      <td>0.055396</td>
+      <td>2.940986</td>
+    </tr>
+    <tr>
+      <th>43</th>
+      <td>(Air conditioning, Power steering)</td>
+      <td>(ABS)</td>
+      <td>0.768087</td>
+      <td>0.891539</td>
+      <td>0.738366</td>
+      <td>0.961305</td>
+      <td>1.078254</td>
+      <td>0.053587</td>
+      <td>2.802995</td>
+    </tr>
+    <tr>
+      <th>67</th>
+      <td>(Air conditioning, Power windows)</td>
+      <td>(ABS)</td>
+      <td>0.768370</td>
+      <td>0.891539</td>
+      <td>0.737936</td>
+      <td>0.960392</td>
+      <td>1.077229</td>
+      <td>0.052904</td>
+      <td>2.738340</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>(Side airbag)</td>
+      <td>(ABS)</td>
+      <td>0.783843</td>
+      <td>0.891539</td>
+      <td>0.752470</td>
+      <td>0.959975</td>
+      <td>1.076762</td>
+      <td>0.053644</td>
+      <td>2.709852</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>(Passenger-side airbag)</td>
+      <td>(ABS)</td>
+      <td>0.821904</td>
+      <td>0.891539</td>
+      <td>0.786129</td>
+      <td>0.956473</td>
+      <td>1.072834</td>
+      <td>0.053370</td>
+      <td>2.491798</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>(Immobilizer)</td>
+      <td>(ABS)</td>
+      <td>0.735174</td>
+      <td>0.891539</td>
+      <td>0.701945</td>
+      <td>0.954801</td>
+      <td>1.070959</td>
+      <td>0.046509</td>
+      <td>2.399645</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>(Central door lock)</td>
+      <td>(ABS)</td>
+      <td>0.761251</td>
+      <td>0.891539</td>
+      <td>0.725921</td>
+      <td>0.953589</td>
+      <td>1.069600</td>
+      <td>0.047236</td>
+      <td>2.336992</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>(Power windows)</td>
+      <td>(ABS)</td>
+      <td>0.841320</td>
+      <td>0.891539</td>
+      <td>0.800806</td>
+      <td>0.951846</td>
+      <td>1.067644</td>
+      <td>0.050738</td>
+      <td>2.252371</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>(Power steering)</td>
+      <td>(ABS)</td>
+      <td>0.864409</td>
+      <td>0.891539</td>
+      <td>0.819335</td>
+      <td>0.947856</td>
+      <td>1.063169</td>
+      <td>0.048681</td>
+      <td>2.080037</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>(Air conditioning)</td>
+      <td>(ABS)</td>
+      <td>0.846205</td>
+      <td>0.891539</td>
+      <td>0.798370</td>
+      <td>0.943471</td>
+      <td>1.058250</td>
+      <td>0.043946</td>
+      <td>1.918691</td>
+    </tr>
+    <tr>
+      <th>60</th>
+      <td>(Side airbag, ABS)</td>
+      <td>(Power steering)</td>
+      <td>0.752470</td>
+      <td>0.864409</td>
+      <td>0.707683</td>
+      <td>0.940480</td>
+      <td>1.088003</td>
+      <td>0.057241</td>
+      <td>2.278070</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>(Side airbag)</td>
+      <td>(Power steering)</td>
+      <td>0.783843</td>
+      <td>0.864409</td>
+      <td>0.731519</td>
+      <td>0.933247</td>
+      <td>1.079636</td>
+      <td>0.053958</td>
+      <td>2.031233</td>
+    </tr>
+    <tr>
+      <th>84</th>
+      <td>(Side airbag, ABS)</td>
+      <td>(Power windows)</td>
+      <td>0.752470</td>
+      <td>0.841320</td>
+      <td>0.701644</td>
+      <td>0.932454</td>
+      <td>1.108323</td>
+      <td>0.068576</td>
+      <td>2.349220</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+ 
+
+
+    </main>
+    

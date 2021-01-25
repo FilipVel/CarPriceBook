@@ -7,12 +7,21 @@
 
 # Chapter2: Figures interactive 
 - divider: true
-- header: Code
+- header: Notebooks
 
-- title: Code
-  url: /03Code/Code
+- title: Combining Datasets
+  url: /02Combine/first
   not_numbered: true
-    
+
+- title: Association Analysis
+  url: /03AssociationAnalysis/mba
+  not_numbered: true
+
+- title: Predicting the Price
+  url: /04Code/Code
+  not_numbered: true
+
+
 - divider: true
 
 # Chapter3: External links section
