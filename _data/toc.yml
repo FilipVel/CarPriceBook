@@ -9,10 +9,6 @@
 - divider: true
 - header: Code
 
-- title: Profile Report
-  url: /02ProfileReport/report
-  not_numbered: true
-
 - title: Code
   url: /03Code/Code
   not_numbered: true
