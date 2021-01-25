@@ -4,10 +4,14 @@
 - title: Introduction
   url: /01Introduction/intro
   not_numbered: true
-  
+
 # Chapter2: Figures interactive 
 - divider: true
 - header: Code
+
+- title: Profile Report
+  url: /02ProfileReport/report
+  not_numbered: true
 
 - title: Code
   url: /03Code/Code
