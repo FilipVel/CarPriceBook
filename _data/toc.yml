@@ -1,0 +1,24 @@
+# Chapter1: Introduction
+- header: Content
+
+- title: Introduction
+  url: /01Introduction/intro
+  not_numbered: true
+  
+# Chapter2: Figures interactive 
+- divider: true
+- header: Code
+
+- title: Code
+  url: /03Code/Code
+  not_numbered: true
+    
+- divider: true
+
+# Chapter3: External links section
+- header: External links
+
+- title: GitHub repository
+  url: https://github.com/FilipVel/CarPriceBook
+  external: true
+  not_numbered: true
