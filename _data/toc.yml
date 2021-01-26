@@ -9,6 +9,10 @@
 - divider: true
 - header: Notebooks
 
+- title: Gathering the Data
+  url: /00Scheduled/scheduled
+  not_numbered: true
+
 - title: Combining Datasets
   url: /02Combine/first
   not_numbered: true
