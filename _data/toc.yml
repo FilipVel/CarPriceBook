@@ -21,6 +21,12 @@
   url: /03AssociationAnalysis/mba
   not_numbered: true
 
+- title: Cluster Analysis
+  url: /05Clustering/clustering
+  not_numbered: true
+
+
+
 - title: Predicting the Price
   url: /04Code/Code
   not_numbered: true
