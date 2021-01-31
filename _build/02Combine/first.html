@@ -7,9 +7,9 @@ kernel_path: content/02Combine
 has_widgets: false
 title: |-
   Combining Datasets
-pagenum: 1
+pagenum: 2
 prev_page:
-  url: /01Introduction/intro.html
+  url: /00Scheduled/scheduled.html
 next_page:
   url: /03AssociationAnalysis/mba.html
 suffix: .ipynb
@@ -73,7 +73,7 @@ Next this table is further expanded with a dataset downloaded from Kaggle which 
 
 <span class="k">def</span> <span class="nf">readData</span><span class="p">():</span>
 
-    <span class="n">client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="s1">&#39;mongodb+srv://Martin:Kostadinov@dwprojectcluster.lpqbf.mongodb.net/cars_database?retryWrites=true&amp;w=majority&#39;</span><span class="p">)</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="s1">&#39;mongodb+srv://&lt;User&gt;:&lt;Pass&gt;@dwprojectcluster.lpqbf.mongodb.net/cars_database?retryWrites=true&amp;w=majority&#39;</span><span class="p">)</span>
 
     <span class="n">df_cars</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">cars_database</span><span class="o">.</span><span class="n">cars</span><span class="o">.</span><span class="n">find</span><span class="p">({})))</span>
     <span class="n">df_cars</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;_id&#39;</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>

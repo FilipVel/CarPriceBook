@@ -7,11 +7,11 @@ kernel_path: content/03AssociationAnalysis
 has_widgets: false
 title: |-
   Association Analysis
-pagenum: 2
+pagenum: 3
 prev_page:
   url: /02Combine/first.html
 next_page:
-  url: /04Code/Code.html
+  url: /05Clustering/clustering.html
 suffix: .ipynb
 search: x br y lift supp itemset association dataset equipment analysis us support text confidence features our measure rule listings cup measures independent occurrences lets table having binary representing presence extra car makes suitable run fields definition market basket mainly data mining process helps identify co occurrence certain events activities performed user group case results pairs found together often main concepts help strength follows appears total defined proportion transactions database contain conf probability occuring times ratio observed expected imply probabilities meaning doesnt show any statistically proven relationship degree those dependent another items substitute sorting complex usefull same sorted
 
@@ -95,7 +95,7 @@ This makes the dataset suitable to run association analysis on the equipment fie
 
 <span class="k">def</span> <span class="nf">readData</span><span class="p">():</span>
 
-    <span class="n">client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="s1">&#39;mongodb+srv://Martin:Kostadinov@dwprojectcluster.lpqbf.mongodb.net/cars_database?retryWrites=true&amp;w=majority&#39;</span><span class="p">)</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="s1">&#39;mongodb+srv://&lt;User&gt;:&lt;Pass&gt;@dwprojectcluster.lpqbf.mongodb.net/cars_database?retryWrites=true&amp;w=majority&#39;</span><span class="p">)</span>
 
     <span class="n">df_cars</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">cars_database</span><span class="o">.</span><span class="n">cars</span><span class="o">.</span><span class="n">find</span><span class="p">({})))</span>
     <span class="n">df_cars</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;_id&#39;</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
