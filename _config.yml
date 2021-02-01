@@ -129,7 +129,7 @@ defaults:
     toc_icon: list-ul
     excerpt: ''
 
-favicon_path: images/logo/logoi.ico
+favicon_path: images/logo/favicon.ico
 
 # Markdown Processing
 markdown: kramdown
